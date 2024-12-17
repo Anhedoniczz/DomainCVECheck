@@ -31,28 +31,33 @@ if [ -z "$domain" ]; then
     usage
 fi
 
-mkdir $domain
+mkdir -p "$domain"
 echo "[+] Step 1: Subdomain searching for $domain..."
 assetfinder -subs-only "$domain" | uniq | sort > "$domain/subdomains_assetfinder"
 subfinder -d "$domain" -silent > "$domain/subdomains_subfinder"
 cat "$domain/subdomains_assetfinder" "$domain/subdomains_subfinder" | sort -u > "$domain/subdomains"
-rm "$domain/subdomains_assetfinder" "$domain/subdomains_subfinder"
 echo "[+] Subdomains saved to $domain/subdomains."
 
 echo "[+] Step 2: Checking for live subdomains using httpx-toolkit..."
-httpx-toolkit -l $domain/subdomains -ports 80,443,8000,8080,8888 -threads 200 -o $domain/alivesubs 
+httpx-toolkit -l "$domain/subdomains" -ports 80,443,8000,8080,8888 -threads 200 -o "$domain/alivesubs"
 awk -F'//' '{print $2}' "$domain/alivesubs" | sort -u > "$domain/validdomains"
-rm "$domain/alivesubs" "$domain/subdomains"
+echo "[+] Live subdomains saved to $domain/validdomains."
 
-echo "[+] Step 3: Extracting IPs for live domains..."
+echo "[+] Step 3: Extracting unique IPs for live subdomains..."
 while read -r subdomain; do
-    dig +short "$subdomain" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' >> "$domain/ips"
+    ips=$(dig +short "$subdomain" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    if [ -n "$ips" ]; then
+        for ip in $ips; do
+            echo "$ip,$subdomain" >> "$domain/ip_subdomain_map"
+        done
+    fi
 done < "$domain/validdomains"
-sort -u -o "$domain/ips" "$domain/ips"
+awk -F',' '!seen[$1]++' "$domain/ip_subdomain_map" > "$domain/unique_ips"
+echo "[+] Unique IPs and subdomains saved."
 
 echo "[+] Step 4: Querying IPs for vulnerabilities..."
 mkdir -p "$domain/CVES"
-while read -r ip; do
+while IFS=',' read -r ip subdomain; do
     output=$(curl -s "https://internetdb.shodan.io/$ip")
     if ! echo "$output" | jq -e . > /dev/null 2>&1; then
         echo "[!] Invalid JSON for IP: $ip"
@@ -60,7 +65,6 @@ while read -r ip; do
     fi
     cves=$(echo "$output" | jq -r '.vulns[]?')
     if [ -n "$cves" ]; then
-        subdomain=$(grep -F "$ip" "$domain/validdomains" | head -n 1)
         file="$domain/CVES/${subdomain}_cves"
         echo "IP: $ip" > "$file"
         echo -e "\nCPES:" >> "$file"
@@ -76,9 +80,10 @@ while read -r ip; do
             description=$(grep "$cve" cvedb.csv | cut -d',' -f2)
             echo "$cve - $description" >> "$file"
         done <<< "$cves"
+        echo "[+] Saved CVEs for $subdomain ($ip)."
     fi
-done < "$domain/ips"
+done < "$domain/unique_ips"
 
-rm "$domain/ips"
-
-echo "[+] Completed. Files cleaned up. Only validdomains retained."
+echo "[+] Cleaning up intermediate files..."
+rm -f "$domain/subdomains" "$domain/alivesubs" "$domain/ip_subdomain_map" "$domain/unique_ips" "$domain/subdomains_subfinder" "$domain/subdomains_assetfinder"
+echo "[+] Processing completed. Only validdomains retained."

@@ -34,11 +34,12 @@ Clone the repository:
    rm -f cvedb.zip
    ```
 ## Usage 
+
 1. Run the script
     ```bash
     ./subdomain_scanner.sh -u example.com
     ```
-Replace example.com with the domain you want to scan. The script will create a folder with the domain name and save the results there.
+   Replace example.com with the domain you want to scan. The script will create a folder with the domain name and save the results there.
 
 2. View the results:
 
@@ -68,4 +69,7 @@ CVES/
         |- CVEs:
             - CVE-2021-12345 - Description of the CVE
 ```
+
+## Contributing
+Feel free to fork the repository, make changes, and submit pull requests. If you have any suggestions or issues, open an issue and we will address it as soon as possible.
 

@@ -30,8 +30,6 @@ Clone the repository:
    git clone https://github.com/anhedoniczz/VulnScope
    cd VulnScope
    chmod +x VulnScope.sh installer.sh
-   unzip cvedb.zip
-   rm -f cvedb.zip
    ```
 ## Usage 
 

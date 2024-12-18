@@ -8,3 +8,5 @@ sudo apt-get install httpx-toolkit
 
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 go install github.com/tomnomnom/assetfinder@latest
+unzip cvedb.zip
+rm -f cvedb.zip

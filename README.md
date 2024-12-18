@@ -36,10 +36,10 @@ Clone the repository:
 ## Usage 
 
 1. Run the script
-    ```bash
-    ./VulnScope.sh -u example.com
-    ```
-   Replace example.com with the domain you want to scan. The script will create a folder with the domain name and save the results there.
+```bash
+./VulnScope.sh -u example.com
+```
+Replace example.com with the domain you want to scan. The script will create a folder with the domain name and save the results there.
 
 2. View the results:
 

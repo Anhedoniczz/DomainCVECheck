@@ -37,7 +37,7 @@ Clone the repository:
 
 1. Run the script
     ```bash
-    ./subdomain_scanner.sh -u example.com
+    ./VulnScope.sh -u example.com
     ```
    Replace example.com with the domain you want to scan. The script will create a folder with the domain name and save the results there.
 
